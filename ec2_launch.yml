@@ -1,0 +1,26 @@
+---
+  - name: Provision an EC2 Instance
+    hosts: localhost
+    connection: local
+    gather_facts: False
+    tags: ec2instance
+
+    tasks:
+      - name: Launching an EC2 Instance
+        local_action: ec2
+                      instance_type=t2.micro
+                      image=ami-4fffc834
+                      region=us-east-1
+                      keypair=gittest
+                      count=1
+                      group_id=sg-0128df72
+                      wait=true
+        register: ec2    
+      - name: Add the newly created EC2 instance(s) to the local host group (located inside the directory)
+        local_action: lineinfile 
+                      dest="./hosts" 
+                      regexp={{ item.public_ip }} 
+                      insertafter="[webserver]" line={{ item.public_ip }}
+        with_items: "{{ ec2.instances }}"
+
+
